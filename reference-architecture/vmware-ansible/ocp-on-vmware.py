@@ -396,7 +396,7 @@ class VMwareOnOCP(object):
             bind_entry.append(nfs_entry + "\t\tA\t" + ip4addr[0])
             del ip4addr[0]
 
-        if self.byo_lb == "False":
+        if self.byo_lb == "False" and int(self.master_nodes) > 1:
             if self.lb_ha_ip:
                 bind_entry.append(self.lb_ha_ip + "\t\tA\t" + wild_ip)
                 i = 2
