@@ -44,5 +44,6 @@
       notify: restart keepalived
 
   when:
+    - (groups[cluster_id + '-master'] | length) > 1
     - lb_ha_ip is defined
     - lb_ha_ip|trim != ''

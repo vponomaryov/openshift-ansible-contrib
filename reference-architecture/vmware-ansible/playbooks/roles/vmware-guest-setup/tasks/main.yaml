@@ -21,6 +21,7 @@
         - open-vm-tools
         - PyYAML
         - perl
+        - python-ipaddress
         - net-tools
         - chrony
         - python-six

@@ -8,8 +8,9 @@
 
 - hosts: single_master
   tasks:
-  - name: Enable gluster 3 repo to be able to install heketi RPMS
-    command: subscription-manager repos --enable=rh-gluster-3-for-rhel-7-server-rpms
+  - name: Enable Gluster 3 repo
+    import_role:
+      name: enable-gluster-repo
   - name: Install and run heketi
     import_role:
       name: heketi-install

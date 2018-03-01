@@ -8,10 +8,21 @@
   # Group systems
   - instance-groups
 
+- include: "{{
+      lookup('env', 'VIRTUAL_ENV')
+  }}/usr/share/ansible/openshift-ansible/playbooks/prerequisites.yml"
+  when: openshift_vers not in ['v3_6', 'v3_7']
+
 - include: prerequisite.yaml
+  when: openshift_vers in ['v3_6', 'v3_7']
 
 - name: call openshift includes for installer
-  include: "{{ lookup('env', 'VIRTUAL_ENV') }}/usr/share/ansible/openshift-ansible/playbooks/byo/config.yml"
+  include: "{{
+      lookup('env', 'VIRTUAL_ENV')
+  }}/usr/share/ansible/openshift-ansible/playbooks/{{
+      (openshift_vers in ['v3_6', 'v3_7']) |
+          ternary('byo/config.yml', 'deploy_cluster.yml')
+  }}"
   vars:
     openshift_release: "v3.{{ openshift_vers.split('_')[-1] }}"
     debug_level: 2
@@ -45,16 +56,23 @@
     openshift_hosted_registry_replicas: 1
     openshift_master_api_port: "{{ console_port }}"
     openshift_master_console_port: "{{ console_port }}"
-    openshift_master_logging_public_url: "https://kibana.{{ osm_default_subdomain }}"
     openshift_node_local_quota_per_fsgroup: 512Mi
     osm_cluster_network_cidr: 172.16.0.0/16
+    openshift_web_console_install: false
     osm_use_cockpit: false
     osm_default_node_selector: "role=app"
     openshift_registry_selector: "role=app"
     openshift_override_hostname_check: true
+    openshift_disable_check: docker_image_availability
     openshift_router_selector: "role=app"
     openshift_master_cluster_method: native
     openshift_cloudprovider_kind: vsphere
+    openshift_cloudprovider_vsphere_host: "{{ vcenter_host }}"
+    openshift_cloudprovider_vsphere_username: "{{ vcenter_username }}"
+    openshift_cloudprovider_vsphere_password: "{{ vcenter_password }}"
+    openshift_cloudprovider_vsphere_datacenter: "{{ vcenter_datacenter }}"
+    openshift_cloudprovider_vsphere_datastore: "{{ vcenter_datastore }}"
+    openshift_cloudprovider_vsphere_folder: "{{ vcenter_folder }}"
     wildcard_zone: "{{ app_dns_prefix }}.{{ dns_zone }}"
     osm_default_subdomain: "{{ wildcard_zone }}"
     openshift_master_default_subdomain: "{{osm_default_subdomain}}"

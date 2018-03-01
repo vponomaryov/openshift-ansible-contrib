@@ -7,7 +7,7 @@
   roles:
   - setup-custom-domain-names
   - instance-groups
-  - gluster-rhsm-repos
+  - package-repos
   - vmware-guest-setup
   - gluster-crs-prerequisites
   - gluster-ports

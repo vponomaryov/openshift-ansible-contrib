@@ -12,7 +12,7 @@
     - vars/main.yaml
   roles:
     - setup-custom-domain-names
-    - rhsm
+    - package-repos
     - vmware-guest-setup
     - cloud-provider-setup
     - docker-storage-setup

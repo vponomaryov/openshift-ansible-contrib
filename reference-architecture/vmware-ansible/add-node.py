@@ -76,6 +76,11 @@ class VMWareAddNode(object):
     heketi_user_key=None
     tag=None
     verbose=0
+    docker_registry_url=None
+    docker_additional_registries=None
+    docker_insecure_registries=None
+    ose_puddle_repo=None
+    gluster_puddle_repo=None
 
     def __init__(self, load=True):
 
@@ -170,6 +175,11 @@ class VMWareAddNode(object):
             'container_storage_disk_type':'eagerZeroedThick',
             'heketi_admin_key': '',
             'heketi_user_key': '',
+            'docker_registry_url': '',
+            'docker_additional_registries': '',
+            'docker_insecure_registries': '',
+            'ose_puddle_repo': '',
+            'gluster_puddle_repo': '',
             'deployment_type':'openshift-enterprise',
             'openshift_vers':'v3_6',
             'vcenter_username':'administrator@vsphere.local',
@@ -226,6 +236,13 @@ class VMWareAddNode(object):
             'vmware', 'additional_disks_to_storage_nodes')
         self.heketi_admin_key = config.get('vmware', 'heketi_admin_key')
         self.heketi_user_key = config.get('vmware', 'heketi_user_key')
+        self.docker_registry_url = config.get('vmware', 'docker_registry_url')
+        self.docker_additional_registries = config.get(
+            'vmware', 'docker_additional_registries')
+        self.docker_insecure_registries = config.get(
+            'vmware', 'docker_insecure_registries')
+        self.ose_puddle_repo = config.get('vmware', 'ose_puddle_repo')
+        self.gluster_puddle_repo = config.get('vmware', 'gluster_puddle_repo')
         self.deployment_type = config.get('vmware','deployment_type')
         self.openshift_vers = config.get('vmware','openshift_vers')
         self.vcenter_host = config.get('vmware', 'vcenter_host')
@@ -462,6 +479,8 @@ class VMWareAddNode(object):
             'additional_disks_to_storage_nodes': self.additional_disks_to_storage_nodes,
             'heketi_admin_key': self.heketi_admin_key,
             'heketi_user_key': self.heketi_user_key,
+            'ose_puddle_repo': self.ose_puddle_repo,
+            'gluster_puddle_repo': self.gluster_puddle_repo,
             'deployment_type': self.deployment_type,
             'openshift_vers': self.openshift_vers,
             'admin_key': self.admin_key,
@@ -480,6 +499,14 @@ class VMWareAddNode(object):
             'nfs_host': self.nfs_host,
             'nfs_registry_mountpoint': self.nfs_registry_mountpoint,
         }
+        if self.docker_registry_url:
+            playbook_vars_dict['oreg_url'] = self.docker_registry_url
+        if self.docker_additional_registries:
+            playbook_vars_dict['openshift_docker_additional_registries'] = (
+                self.docker_additional_registries)
+        if self.docker_insecure_registries:
+            playbook_vars_dict['openshift_docker_insecure_registries'] = (
+                self.docker_insecure_registries)
 
         playbook_vars_str = ' '.join('%s=%s' % (k, v)
                                      for (k, v) in playbook_vars_dict.items())

@@ -6,7 +6,7 @@
   - vars/main.yaml
   roles:
   - instance-groups
-  - rhsm
+  - package-repos
 
 - hosts: cluster_hosts
   gather_facts: no

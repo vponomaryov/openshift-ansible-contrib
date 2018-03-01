@@ -3,14 +3,19 @@
   openshift_facts:
     role: common
 
+- name: Set client binary var
+  set_fact:
+    client_binary: "{{ openshift.common.client_binary |
+                        default(openshift_client_binary) }}"
+
 - name: use the default project
-  shell: "{{ openshift.common.client_binary }} project default"
+  shell: "{{ client_binary }} project default"
 
 - name: Count the infrastructure nodes
-  shell: "{{ openshift.common.client_binary }}  get nodes --show-labels | grep role=infra -c"
+  shell: "{{ client_binary }}  get nodes --show-labels | grep role=infra -c"
   register: nodes
   when: node_type == "infra"
 
 - name: Scale the router
-  shell: "{{ openshift.common.client_binary }} scale dc/router --replicas={{ nodes.stdout }}"
+  shell: "{{ client_binary }} scale dc/router --replicas={{ nodes.stdout }}"
   when: node_type == "infra"

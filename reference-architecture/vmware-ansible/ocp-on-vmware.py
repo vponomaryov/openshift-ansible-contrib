@@ -66,6 +66,11 @@ class VMwareOnOCP(object):
     clean=None
     vm_ipaddr_allocation_type=None,
     cns_automation_config_file_path=None,
+    docker_registry_url=None
+    docker_additional_registries=None
+    docker_insecure_registries=None
+    ose_puddle_repo=None
+    gluster_puddle_repo=None
 
     def __init__(self, load=True):
         if load:
@@ -226,6 +231,11 @@ class VMwareOnOCP(object):
             'vm_network':'VM Network',
             'vm_ipaddr_allocation_type': 'static',
             'cns_automation_config_file_path': '',
+            'docker_registry_url': '',
+            'docker_additional_registries': '',
+            'docker_insecure_registries': '',
+            'ose_puddle_repo': '',
+            'gluster_puddle_repo': '',
             'rhel_subscription_pool':'Red Hat OpenShift Container Platform, Premium*',
             'openshift_sdn':'redhat/openshift-ovs-subnet',
             'byo_lb':'False',
@@ -286,6 +296,14 @@ class VMwareOnOCP(object):
         self.vm_ipaddr_allocation_type = config.get('vmware', 'vm_ipaddr_allocation_type')
         self.cns_automation_config_file_path = config.get(
             'vmware', 'cns_automation_config_file_path')
+        self.docker_registry_url = (
+            config.get('vmware', 'docker_registry_url') or '').strip()
+        self.docker_additional_registries = config.get(
+            'vmware', 'docker_additional_registries')
+        self.docker_insecure_registries = config.get(
+            'vmware', 'docker_insecure_registries')
+        self.ose_puddle_repo = config.get('vmware', 'ose_puddle_repo')
+        self.gluster_puddle_repo = config.get('vmware', 'gluster_puddle_repo')
         self.rhel_subscription_user = config.get('vmware', 'rhel_subscription_user')
         self.rhel_subscription_pass = config.get('vmware', 'rhel_subscription_pass')
         self.rhel_subscription_server = config.get('vmware', 'rhel_subscription_server')
@@ -653,6 +671,8 @@ class VMwareOnOCP(object):
             'vm_ipaddr_allocation_type': self.vm_ipaddr_allocation_type,
             'cns_automation_config_file_path': (
                 self.cns_automation_config_file_path),
+            'ose_puddle_repo': self.ose_puddle_repo,
+            'gluster_puddle_repo': self.gluster_puddle_repo,
             'wildcard_zone': self.wildcard_zone,
             'console_port': self.console_port,
             'cluster_id': self.cluster_id,
@@ -676,6 +696,14 @@ class VMwareOnOCP(object):
             'nfs_host': self.nfs_host,
             'nfs_registry_mountpoint': self.nfs_registry_mountpoint,
         }
+        if self.docker_registry_url:
+            playbook_vars_dict['oreg_url'] = self.docker_registry_url
+        if self.docker_additional_registries:
+            playbook_vars_dict['openshift_docker_additional_registries'] = (
+                self.docker_additional_registries)
+        if self.docker_insecure_registries:
+            playbook_vars_dict['openshift_docker_insecure_registries'] = (
+                self.docker_insecure_registries)
 
         playbook_vars_str = ' '.join('%s=%s' % (k, v)
                                      for (k, v) in playbook_vars_dict.items())

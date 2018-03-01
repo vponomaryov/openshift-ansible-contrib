@@ -12,8 +12,9 @@
   vars_files:
   - vars/main.yaml
   tasks:
-  - name: Enable gluster 3 repo to be able to install heketi client
-    command: subscription-manager repos --enable=rh-gluster-3-for-rhel-7-server-rpms
+  - name: Enable Gluster 3 repo
+    import_role:
+      name: enable-gluster-repo
   - name: Install heketi client for CNS and CRS needs
     package:
       name: heketi-client
