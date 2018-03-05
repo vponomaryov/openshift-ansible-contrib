@@ -433,12 +433,59 @@ class VMWareAddNode(object):
                 self.tag = 'all'
             playbooks = ['playbooks/add-node.yaml']
 
+        playbook_vars_dict = {
+            'add_node': 'yes',
+            'vcenter_host': self.vcenter_host,
+            'vcenter_username': self.vcenter_username,
+            'vcenter_password': self.vcenter_password,
+            'vcenter_template_name': self.vcenter_template_name,
+            'vcenter_folder': self.vcenter_folder,
+            'vcenter_datastore': self.vcenter_datastore,
+            'vcenter_datacenter': self.vcenter_datacenter,
+            'vcenter_cluster': self.vcenter_cluster,
+            'vcenter_datacenter': self.vcenter_datacenter,
+            'vcenter_resource_pool': self.vcenter_resource_pool,
+            'dns_zone': self.dns_zone,
+            'app_dns_prefix': self.app_dns_prefix,
+            'vm_dns': self.vm_dns,
+            'vm_gw': self.vm_gw,
+            'vm_netmask': self.vm_netmask,
+            'vm_network': self.vm_network,
+            'vm_ipaddr_allocation_type': self.vm_ipaddr_allocation_type,
+            'cns_automation_config_file_path': self.cns_automation_config_file_path,
+            'wildcard_zone': self.wildcard_zone,
+            'console_port': self.console_port,
+            'cluster_id': self.cluster_id,
+            'container_storage': self.container_storage,
+            'container_storage_disks': self.container_storage_disks,
+            'container_storage_disk_type': self.container_storage_disk_type,
+            'additional_disks_to_storage_nodes': self.additional_disks_to_storage_nodes,
+            'heketi_admin_key': self.heketi_admin_key,
+            'heketi_user_key': self.heketi_user_key,
+            'deployment_type': self.deployment_type,
+            'openshift_vers': self.openshift_vers,
+            'admin_key': self.admin_key,
+            'user_key': self.user_key,
+            'rhel_subscription_user': self.rhel_subscription_user,
+            'rhel_subscription_pass': self.rhel_subscription_pass,
+            'rhsm_satellite': self.rhel_subscription_server,
+            'rhsm_pool': self.rhel_subscription_pool,
+            'rhsm_katello_url': self.rhsm_katello_url,
+            'rhsm_activation_key': self.rhsm_activation_key,
+            'rhsm_org_id': self.rhsm_org_id,
+            'openshift_sdn': self.openshift_sdn,
+            'lb_host': self.lb_host,
+            'node_type': self.node_type,
+            'ocp_hostname_prefix': self.ocp_hostname_prefix,
+            'nfs_host': self.nfs_host,
+            'nfs_registry_mountpoint': self.nfs_registry_mountpoint,
+        }
+
+        playbook_vars_str = ' '.join('%s=%s' % (k, v)
+                                     for (k, v) in playbook_vars_dict.items())
+
         for playbook in playbooks:
-
-            devnull='> /dev/null'
-
-            if self.verbose > 0:
-                devnull=''
+            devnull = '' if self.verbose > 0 else '> /dev/null'
 
             # refresh the inventory cache to prevent stale hosts from
             # interferring with re-running
@@ -449,102 +496,17 @@ class VMWareAddNode(object):
             command='rm -rf .ansible/cached_facts'
             os.system(command)
 
-            command='ansible-playbook'
-            command=command + ' --extra-vars "@./%s" --tags %s -e \' add_node=yes vcenter_host=%s \
-            vcenter_username=%s \
-            vcenter_password=%s \
-            vcenter_template_name=%s \
-            vcenter_folder=%s \
-            vcenter_datastore=%s \
-            vcenter_datacenter=%s \
-            vcenter_cluster=%s \
-            vcenter_datacenter=%s \
-            vcenter_resource_pool=%s \
-            dns_zone=%s \
-            app_dns_prefix=%s \
-            vm_dns=%s \
-            vm_gw=%s \
-            vm_netmask=%s \
-            vm_network=%s \
-            vm_ipaddr_allocation_type=%s \
-            cns_automation_config_file_path=%s \
-            wildcard_zone=%s \
-            console_port=%s \
-            cluster_id=%s \
-            container_storage=%s \
-            container_storage_disks=%s \
-            container_storage_disk_type=%s \
-            additional_disks_to_storage_nodes=%s\
-            heketi_admin_key=%s\
-            heketi_user_key=%s\
-            deployment_type=%s \
-            openshift_vers=%s \
-            admin_key=%s \
-            user_key=%s \
-            rhel_subscription_user=%s \
-            rhel_subscription_pass=%s \
-            rhsm_satellite=%s \
-            rhsm_pool="%s" \
-            rhsm_katello_url="%s" \
-            rhsm_activation_key="%s" \
-            rhsm_org_id="%s" \
-            openshift_sdn=%s \
-            lb_host=%s \
-            node_type=%s \
-            ocp_hostname_prefix=%s \
-            nfs_host=%s \
-            nfs_registry_mountpoint=%s \' %s' % ( self.inventory_file,
-                            self.tag,
-                            self.vcenter_host,
-                            self.vcenter_username,
-                            self.vcenter_password,
-                            self.vcenter_template_name,
-                            self.vcenter_folder,
-                            self.vcenter_datastore,
-                            self.vcenter_datacenter,
-                            self.vcenter_cluster,
-                            self.vcenter_datacenter,
-                            self.vcenter_resource_pool,
-                            self.dns_zone,
-                            self.app_dns_prefix,
-                            self.vm_dns,
-                            self.vm_gw,
-                            self.vm_netmask,
-                            self.vm_network,
-                            self.vm_ipaddr_allocation_type,
-                            self.cns_automation_config_file_path,
-                            self.wildcard_zone,
-                            self.console_port,
-                            self.cluster_id,
-                            self.container_storage,
-                            self.container_storage_disks,
-                            self.container_storage_disk_type,
-                            self.additional_disks_to_storage_nodes,
-                            self.heketi_admin_key,
-                            self.heketi_user_key,
-                            self.deployment_type,
-                            self.openshift_vers,
-                            self.admin_key,
-                            self.user_key,
-                            self.rhel_subscription_user,
-                            self.rhel_subscription_pass,
-                            self.rhel_subscription_server,
-                            self.rhel_subscription_pool,
-		            self.rhsm_katello_url,
-        		    self.rhsm_activation_key,
-        		    self.rhsm_org_id,
-                            self.openshift_sdn,
-                            self.lb_host,
-                            self.node_type,
-                            self.ocp_hostname_prefix,
-                            self.nfs_host,
-                            self.nfs_registry_mountpoint,
-                            playbook)
+            command = (
+               "ansible-playbook"
+               " --extra-vars '@./%s'"
+               " --tags %s"
+               " -e '%s' %s" % (
+                   self.inventory_file, self.tag, playbook_vars_str, playbook))
 
             if self.verbose > 0:
                 command += " -vvvvv"
-                click.echo('We are running: %s' % command)
 
+            click.echo('We are running: %s' % command)
             status = os.system(command)
             if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
                 return os.WEXITSTATUS(status)

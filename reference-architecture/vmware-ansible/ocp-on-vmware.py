@@ -634,107 +634,68 @@ class VMwareOnOCP(object):
         if self.tag:
             tags = self.tag
 
-        if self.lb_ha_ip != '':
-            self.lb_host = self.lb_ha_ip
+        playbook_vars_dict = {
+            'vcenter_host': self.vcenter_host,
+            'vcenter_username': self.vcenter_username,
+            'vcenter_password': self.vcenter_password,
+            'vcenter_template_name': self.vcenter_template_name,
+            'vcenter_folder': self.vcenter_folder,
+            'vcenter_cluster': self.vcenter_cluster,
+            'vcenter_datacenter': self.vcenter_datacenter,
+            'vcenter_datastore': self.vcenter_datastore,
+            'vcenter_resource_pool': self.vcenter_resource_pool,
+            'dns_zone': self.dns_zone,
+            'app_dns_prefix': self.app_dns_prefix,
+            'vm_dns': self.vm_dns,
+            'vm_gw': self.vm_gw,
+            'vm_netmask': self.vm_netmask,
+            'vm_network': self.vm_network,
+            'vm_ipaddr_allocation_type': self.vm_ipaddr_allocation_type,
+            'cns_automation_config_file_path': (
+                self.cns_automation_config_file_path),
+            'wildcard_zone': self.wildcard_zone,
+            'console_port': self.console_port,
+            'cluster_id': self.cluster_id,
+            'deployment_type': self.deployment_type,
+            'openshift_vers': self.openshift_vers,
+            'rhsm_user': self.rhel_subscription_user,
+            'rhsm_password': self.rhel_subscription_pass,
+            'rhsm_satellite': self.rhel_subscription_server,
+            'rhsm_pool': self.rhel_subscription_pool,
+            'rhsm_katello_url': self.rhsm_katello_url,
+            'rhsm_activation_key': self.rhsm_activation_key,
+            'rhsm_org_id': self.rhsm_org_id,
+            'openshift_sdn': self.openshift_sdn,
+            'containerized': self.containerized,
+            'container_storage': self.container_storage,
+            'openshift_hosted_metrics_deploy': (
+                self.openshift_hosted_metrics_deploy),
+            'lb_host': self.lb_host,
+            'lb_ha_ip': self.lb_ha_ip,
+            'ocp_hostname_prefix': self.ocp_hostname_prefix,
+            'nfs_host': self.nfs_host,
+            'nfs_registry_mountpoint': self.nfs_registry_mountpoint,
+        }
+
+        playbook_vars_str = ' '.join('%s=%s' % (k, v)
+                                     for (k, v) in playbook_vars_dict.items())
 
         for tag in tags.split(','):
-            playbook = "playbooks/" + tag + ".yaml"
-            tags = 'all'
-
-            devnull='> /dev/null'
-
-            if self.verbose > 0:
-                devnull=''
-
-            command='ansible-playbook  --extra-vars "@./infrastructure.json" --tags %s -e \'vcenter_host=%s \
-            vcenter_username=%s \
-            vcenter_password=%s \
-            vcenter_template_name=%s \
-            vcenter_folder=%s \
-            vcenter_cluster=%s \
-            vcenter_datacenter=%s \
-            vcenter_datastore=%s \
-            vcenter_resource_pool=%s \
-            dns_zone=%s \
-            app_dns_prefix=%s \
-            vm_dns=%s \
-            vm_gw=%s \
-            vm_netmask=%s \
-            vm_network=%s \
-            vm_ipaddr_allocation_type=%s \
-            cns_automation_config_file_path=%s \
-            wildcard_zone=%s \
-            console_port=%s \
-            cluster_id=%s \
-            deployment_type=%s \
-            openshift_vers=%s \
-            rhsm_user=%s \
-            rhsm_password=%s \
-            rhsm_satellite=%s \
-            rhsm_pool="%s" \
-            rhsm_katello_url="%s" \
-            rhsm_activation_key="%s" \
-            rhsm_org_id="%s" \
-            openshift_sdn=%s \
-            containerized=%s \
-            container_storage=%s \
-            openshift_hosted_metrics_deploy=%s \
-            lb_host=%s \
-            lb_ha_ip=%s \
-            ocp_hostname_prefix=%s \
-            nfs_host=%s \
-            nfs_registry_mountpoint=%s \' %s' % ( tags,
-                            self.vcenter_host,
-                            self.vcenter_username,
-                            self.vcenter_password,
-                            self.vcenter_template_name,
-                            self.vcenter_folder,
-                            self.vcenter_cluster,
-                            self.vcenter_datacenter,
-                            self.vcenter_datastore,
-                            self.vcenter_resource_pool,
-                            self.dns_zone,
-                            self.app_dns_prefix,
-                            self.vm_dns,
-                            self.vm_gw,
-                            self.vm_netmask,
-                            self.vm_network,
-                            self.vm_ipaddr_allocation_type,
-                            self.cns_automation_config_file_path,
-                            self.wildcard_zone,
-                            self.console_port,
-                            self.cluster_id,
-                            self.deployment_type,
-                            self.openshift_vers,
-                            self.rhel_subscription_user,
-                            self.rhel_subscription_pass,
-                            self.rhel_subscription_server,
-                            self.rhel_subscription_pool,
-			    self.rhsm_katello_url,
-			    self.rhsm_activation_key,
-			    self.rhsm_org_id,
-                            self.openshift_sdn,
-                            self.containerized,
-                            self.container_storage,
-                            self.openshift_hosted_metrics_deploy,
-                            self.lb_host,
-                            self.lb_ha_ip,
-                            self.ocp_hostname_prefix,
-                            self.nfs_host,
-                            self.nfs_registry_mountpoint,
-                            playbook)
-
+            command = (
+                "ansible-playbook"
+                " --extra-vars '@./infrastructure.json'"
+                " --tags all"
+                " -e '%s' playbooks/%s.yaml") % (playbook_vars_str, tag)
 
             if self.verbose > 0:
                 command += " -vvvvvv"
-                click.echo('We are running: %s' % command)
 
+            click.echo('We are running: %s' % command)
             status = os.system(command)
             if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
                 return os.WEXITSTATUS(status)
-            else:
-                if self.clean is True:
-                    self._reset_ocp_vars()
+            elif self.clean is True:
+                self._reset_ocp_vars()
 
 if __name__ == '__main__':
     VMwareOnOCP()
