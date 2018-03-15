@@ -3,16 +3,35 @@
   import_role:
     name: rhsm
 
-- name: Create additional repo with downstream packages for OpenShift 3.X
+- name: Evaluate OCP repo name
+  set_fact:
+    tmp_ose_repo_name: "rhel-7-server-ose-3.{{ openshift_vers.split('_')[-1] }}-rpms"
+
+- name: Install 'yum-utils' package to be able to use 'yum-config-manger'
+  yum:
+    name: yum-utils
+    state: latest
+    disablerepo: "{{ tmp_ose_repo_name }}"
+
+# NOTE(vponomar): we disable repo locally, not using subscription manager
+# to avoid problems using template VM with existing subscription.
+- name: Disable OpenShift 3.X GA repo
   block:
-  - command: "subscription-manager repos --disable=rhel-7-server-ose-3.{{
-              openshift_vers.split('_')[-1] }}-rpms"
-  - yum_repository:
-      name: "downstream-rhel-7-server-ose-3.{{ openshift_vers.split('_')[-1] }}-rpms"
-      baseurl: "{{ ose_puddle_repo }}"
-      description: "Downstream repo with development versions of packages for OpenShift"
-      enabled: "{{ (ose_puddle_repo != '') | ternary('yes', 'no') }}"
-      gpgcheck: "no"
-      sslverify: "no"
-      cost: 900
-  when: ose_puddle_repo != ''
+  - command: "yum-config-manager --disable {{ tmp_ose_repo_name }}"
+  - command: >
+      "yum-config-manager"
+      "--save"
+      "--setopt={{ tmp_ose_repo_name }}.enabled=false"
+      "--setopt={{ tmp_ose_repo_name }}.skip_if_unavailable=true"
+  when: (ose_puddle_repo != '') or ('crs' in group_names)
+
+- name: Create additional repo with downstream packages for OpenShift 3.X
+  yum_repository:
+    name: "downstream-{{ tmp_ose_repo_name }}"
+    baseurl: "{{ ose_puddle_repo }}"
+    description: "Downstream repo with development versions of packages for OpenShift"
+    enabled: "{{ (ose_puddle_repo != '') | ternary('yes', 'no') }}"
+    gpgcheck: "no"
+    sslverify: "no"
+    cost: 900
+  when: (ose_puddle_repo != '') and ('crs' not in group_names)

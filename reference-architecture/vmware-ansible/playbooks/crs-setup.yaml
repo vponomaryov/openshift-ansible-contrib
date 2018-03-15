@@ -1,10 +1,10 @@
 ---
-- hosts: crs
-  tasks:
-  - name: Install required kernel modules on CRS nodes
-    import_role:
-      name: openshift_storage_glusterfs
-      tasks_from: kernel_modules.yml
+- include: "{{ (openshift_vers in ['v3_6', 'v3_7']) | ternary(
+      'noop.yaml',
+      lookup('env', 'VIRTUAL_ENV') +
+          '/usr/share/ansible/openshift-ansible/playbooks/init/main.yml'
+  ) }} hosts=single_master"
+  when: openshift_vers not in ['v3_6', 'v3_7']
 
 - hosts: single_master
   tasks:

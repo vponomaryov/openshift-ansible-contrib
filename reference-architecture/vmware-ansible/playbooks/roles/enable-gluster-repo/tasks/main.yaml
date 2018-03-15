@@ -1,7 +1,7 @@
 ---
-- name: Enable main Gluster 3 repo with GA packages if downstream one not configured
+- name: Enable main Gluster 3 repo with GA packages
   command: "subscription-manager repos --enable=rh-gluster-3-for-rhel-7-server-rpms"
-  when: gluster_puddle_repo == ''
+#  when: gluster_puddle_repo == ''
 
 - name: Create additional repo with downstream packages for Gluster 3
   yum_repository:
@@ -11,5 +11,5 @@
     enabled: "yes"
     gpgcheck: "no"
     sslverify: "no"
-    cost: 1010
+    cost: 990
   when: gluster_puddle_repo != ''
