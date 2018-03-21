@@ -30,8 +30,6 @@
           (heketi_user_key.strip() != '') |
               ternary(heketi_user_key.strip(), omit) }}"
       openshift_storage_glusterfs_storageclass: true
-      openshift_storage_glusterfs_version: 'latest'
-      openshift_storage_glusterfs_block_version: 'latest'
       openshift_storage_glusterfs_block_host_vol_size: "{{
           container_storage_disks.split(',') | map('int') | list | max }}"
       openshift_storage_glusterfs_s3_deploy: false

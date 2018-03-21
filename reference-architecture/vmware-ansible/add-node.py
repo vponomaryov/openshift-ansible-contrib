@@ -83,6 +83,12 @@ class VMWareAddNode(object):
     docker_image_tag=None
     ose_puddle_repo=None
     gluster_puddle_repo=None
+    cns_glusterfs_image = None
+    cns_glusterfs_version = None
+    cns_glusterfs_block_image = None
+    cns_glusterfs_block_version = None
+    cns_glusterfs_heketi_image = None
+    cns_glusterfs_heketi_version = None
 
     def __init__(self, load=True):
 
@@ -201,6 +207,12 @@ class VMWareAddNode(object):
             'docker_image_tag': '',
             'ose_puddle_repo': '',
             'gluster_puddle_repo': '',
+            'cns_glusterfs_image': '',
+            'cns_glusterfs_version': 'latest',
+            'cns_glusterfs_block_image': '',
+            'cns_glusterfs_block_version': 'latest',
+            'cns_glusterfs_heketi_image': '',
+            'cns_glusterfs_heketi_version': 'latest',
             'deployment_type':'openshift-enterprise',
             'openshift_vers':'v3_6',
             'vcenter_username':'administrator@vsphere.local',
@@ -266,6 +278,18 @@ class VMWareAddNode(object):
             config.get('vmware', 'docker_image_tag') or '').strip()
         self.ose_puddle_repo = config.get('vmware', 'ose_puddle_repo')
         self.gluster_puddle_repo = config.get('vmware', 'gluster_puddle_repo')
+        self.cns_glusterfs_image = (
+            config.get('vmware', 'cns_glusterfs_image')).strip()
+        self.cns_glusterfs_version = (
+            config.get('vmware', 'cns_glusterfs_version')).strip()
+        self.cns_glusterfs_block_image = (
+            config.get('vmware', 'cns_glusterfs_block_image')).strip()
+        self.cns_glusterfs_block_version = (
+            config.get('vmware', 'cns_glusterfs_block_version')).strip()
+        self.cns_glusterfs_heketi_image = (
+            config.get('vmware', 'cns_glusterfs_heketi_image')).strip()
+        self.cns_glusterfs_heketi_version = (
+            config.get('vmware', 'cns_glusterfs_heketi_version')).strip()
         self.deployment_type = config.get('vmware','deployment_type')
         self.openshift_vers = config.get('vmware','openshift_vers')
         self.vcenter_host = config.get('vmware', 'vcenter_host')
@@ -547,6 +571,13 @@ class VMWareAddNode(object):
             playbook_vars_dict['openshift_image_tag'] = self.docker_image_tag
         if self.openshift_vers in ('v3_6', 'v3_7'):
             playbook_vars_dict['docker_version'] = '1.12.6'
+        for key in ('image', 'version',
+                    'block_image', 'block_version',
+                    'heketi_image', 'heketi_version'):
+            value = getattr(self, 'cns_glusterfs_%s' % key)
+            if not value:
+                continue
+            playbook_vars_dict['openshift_storage_glusterfs_%s' % key] = value
 
         playbook_vars_str = ' '.join('%s=%s' % (k, v)
                                      for (k, v) in playbook_vars_dict.items())
