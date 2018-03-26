@@ -69,16 +69,38 @@
       hostname: "{{ item.value.guestname}}"
   with_dict: "{{host_inventory}}"
   when: "item.value.guesttype in ['cns', ]"
+  async: 600
+  poll: 0
+  register: async_vms_creation
+
+- name: Check async status of VMs creation
+  async_status:
+    jid: "{{ async_result_item.ansible_job_id }}"
+  with_items: "{{ async_vms_creation.results }}"
+  loop_control:
+    loop_var: "async_result_item"
+  register: async_poll_results
+  until: async_poll_results.finished
+  retries: 120
+
+- name: Read info of newly created VMs
+  vmware_guest_tools_wait:
+    hostname: "{{ vcenter_host }}"
+    username: "{{ vcenter_username }}"
+    password: "{{ vcenter_password }}"
+    folder: "/{{ vcenter_folder }}"
+    validate_certs: False
+    uuid: "{{ item.instance.hw_product_uuid }}"
+  with_items: "{{ async_poll_results.results }}"
   register: facts
 
 - name: Map node names and their IP addresses
   set_fact:
     ip4addrs: "{{ ip4addrs | default({}) | combine(
-                      {item.item.value.guestname: (
+                      {item.instance.hw_name: (
                            item.instance.hw_eth0.ipaddresses | ipv4 | first)},
                       recursive=True) }}"
   with_items: "{{ facts.results }}"
-  when: "item.item.value.guesttype in ['cns', ]"
 
 - name: Define glusterfs devices
   set_fact:
