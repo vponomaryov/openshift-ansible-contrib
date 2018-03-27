@@ -97,92 +97,6 @@ class VMwareOnOCP(object):
         if os.path.exists(self.inventory_file):
             self._launch_refarch_env()
 
-    def _reset_ocp_vars(self):
-        # Add section here to modify inventory file based on input from user check your vmmark scripts for parsing the file and adding the values
-        for line in fileinput.input("inventory/vsphere/vms/vmware_inventory.ini", inplace=True):
-            if line.startswith("server="):
-                print "server="
-            elif line.startswith("password="):
-                print "password="
-            else:
-                print line,
-
-        for line in fileinput.input("playbooks/ocp-install.yaml", inplace=True):
-        # Parse our ldap url
-            if line.startswith("      url:"):
-                print "      url:"
-            elif line.startswith("      bindPassword:"):
-                print "      bindPassword:"
-            elif line.startswith("      bindDN:"):
-                print "      bindDN:"
-            elif line.startswith("    wildcard_zone:"):
-                print "    wildcard_zone:"
-            elif line.startswith("    load_balancer_hostname:"):
-                print "    load_balancer_hostname:"
-            elif line.startswith("    openshift_hosted_registry_storage_host:"):
-                print "    openshift_hosted_registry_storage_host:"
-            elif line.startswith("    openshift_hosted_registry_storage_nfs_directory:"):
-                print "    openshift_hosted_registry_storage_nfs_directory:"
-            elif line.startswith("    openshift_hosted_metrics_storage_host:"):
-                print "    openshift_hosted_metrics_storage_host:"
-            elif line.startswith("    openshift_hosted_metrics_storage_nfs_directory:"):
-                print "    openshift_hosted_metrics_storage_nfs_directory:"
-            else:
-                print line,
-
-        date = []
-        today = datetime.date.today()
-        date.append(today)
-        timestamp = str(date[0])
-        command = "cp ocp-on-vmware.ini ocp-on-vmware.%s" % timestamp
-        os.system(command)
-
-        for line in fileinput.input("ocp-on-vmware.ini", inplace=True):
-            if line.startswith("cluster_id="):
-                print "cluster_id="
-            elif line.startswith("vcenter_host="):
-                print "vcenter_host="
-            elif line.startswith("vcenter_password="):
-                print "vcenter_password="
-            elif line.startswith("vcenter_datastore="):
-                print "vcenter_datastore="
-            elif line.startswith("vcenter_cluster="):
-                print "vcenter_cluster="
-            elif line.startswith("vcenter_datacenter="):
-                print "vcenter_datacenter="
-            elif line.startswith("dns_zone="):
-                print "dns_zone="
-            elif line.startswith("vm_dns="):
-                print "vm_dns="
-            elif line.startswith("vm_gw="):
-                print "vm_gw="
-            elif line.startswith("vm_netmask="):
-                print "vm_netmask="
-            elif line.startswith("rhel_subscription_user="):
-                print "rhel_subscription_user="
-            elif line.startswith("rhel_subscription_pass="):
-                print "rhel_subscription_pass="
-            elif line.startswith("lb_ha_ip="):
-                print "lb_ha_ip="
-            elif line.startswith("master_nodes="):
-                print "master_nodes=3"
-            elif line.startswith("infra_nodes="):
-                print "infra_nodes=3"
-            elif line.startswith("app_nodes="):
-                print "app_nodes=3"
-            elif line.startswith("vm_ipaddr_start="):
-                print "vm_ipaddr_start="
-            elif line.startswith("vm_ipaddr_allocation_type="):
-                print "vm_ipaddr_allocation_type="
-            elif line.startswith("ldap_user_password="):
-                print "ldap_user_password="
-            elif line.startswith("ldap_fqdn="):
-                print "ldap_fqdn="
-            elif line.startswith("container_storage="):
-                print "container_storage=none"
-            else:
-                print line,
-
     def _check_ocp_vars(self):
         ''' Check to see if the OCP vars have been changed'''
         for line in fileinput.input("playbooks/ocp-install.yaml"):
@@ -653,17 +567,6 @@ class VMwareOnOCP(object):
         if not self.args.no_confirm:
             if not click.confirm('Continue adding nodes with these values?'):
                 sys.exit(0)
-        tags = []
-        tags.append('setup')
-
-        # TODO(vponomar): make it configurable
-        if self.byo_nfs == "False" and False:
-            tags.append('nfs')
-
-        tags.append('prod')
-
-        if self.byo_lb == "False":
-            tags.append('haproxy')
 
         # Add section here to modify inventory file based on input from user check your vmmark scripts for parsing the file and adding the values
         for line in fileinput.input("inventory/vsphere/vms/vmware_inventory.ini", inplace=True):
@@ -676,18 +579,29 @@ class VMwareOnOCP(object):
             else:
                 print line,
 
-        tags.append('ocp-install')
-        tags.append('ocp-configure')
+        if self.clean is True:
+            tags = 'clean'
+        elif self.tag:
+            tags = self.tag
+        else:
+            tags = ['setup']
+
+            # TODO(vponomar): make it configurable
+            if self.byo_nfs == "False" and False:
+                tags.append('nfs')
+
+            tags.append('prod')
+
+            if self.byo_lb == "False":
+                tags.append('haproxy')
+
+            tags.append('ocp-install')
+            tags.append('ocp-configure')
+            tags = ",".join(tags)
 
         # remove any cached facts to prevent stale data during a re-run
         command='rm -rf .ansible/cached_facts'
         os.system(command)
-
-        tags = ",".join(tags)
-        if self.clean is True:
-            tags = 'clean'
-        if self.tag:
-            tags = self.tag
 
         playbook_vars_dict = {
             'vcenter_host': self.vcenter_host,
@@ -781,8 +695,6 @@ class VMwareOnOCP(object):
             status = os.system(command)
             if os.WIFEXITED(status) and os.WEXITSTATUS(status) != 0:
                 return os.WEXITSTATUS(status)
-            elif self.clean is True:
-                self._reset_ocp_vars()
 
 if __name__ == '__main__':
     VMwareOnOCP()
