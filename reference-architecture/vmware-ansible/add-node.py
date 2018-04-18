@@ -546,6 +546,7 @@ class VMWareAddNode(object):
             'ose_puddle_repo': self.ose_puddle_repo,
             'gluster_puddle_repo': self.gluster_puddle_repo,
             'deployment_type': self.deployment_type,
+            'openshift_deployment_type': self.deployment_type,
             'openshift_vers': self.openshift_vers,
             'admin_key': self.admin_key,
             'user_key': self.user_key,
