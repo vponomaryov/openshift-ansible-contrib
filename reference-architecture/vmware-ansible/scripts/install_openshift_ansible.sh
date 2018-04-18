@@ -20,6 +20,8 @@ else
     echo "Using custom Git tag '$TAG'"
 fi
 
+TAG=${TAG/refs\/tags\//}
+
 if [[ ! -d $TARGET_DIR ]]; then
     mkdir -p $TARGET_DIR
     git clone $OPENSHIFT_ANSIBLE_GIT_URL --single-branch --branch $TAG $TARGET_DIR
