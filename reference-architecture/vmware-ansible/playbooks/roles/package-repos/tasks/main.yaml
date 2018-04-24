@@ -7,22 +7,8 @@
   set_fact:
     tmp_ose_repo_name: "rhel-7-server-ose-3.{{ openshift_vers.split('_')[-1] }}-rpms"
 
-- name: Install 'yum-utils' package to be able to use 'yum-config-manger'
-  yum:
-    name: yum-utils
-    state: latest
-    disablerepo: "{{ tmp_ose_repo_name }}"
-
-# NOTE(vponomar): we disable repo locally, not using subscription manager
-# to avoid problems using template VM with existing subscription.
 - name: Disable OpenShift 3.X GA repo
-  block:
-  - command: "yum-config-manager --disable {{ tmp_ose_repo_name }}"
-  - command: >
-      "yum-config-manager"
-      "--save"
-      "--setopt={{ tmp_ose_repo_name }}.enabled=false"
-      "--setopt={{ tmp_ose_repo_name }}.skip_if_unavailable=true"
+  command: "subscription-manager repos --disable={{ tmp_ose_repo_name }}"
   when: (ose_puddle_repo != '') or ('crs' in group_names)
 
 - name: Create additional repo with downstream packages for OpenShift 3.X
