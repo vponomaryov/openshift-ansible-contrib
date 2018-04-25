@@ -592,7 +592,8 @@ class VMwareOnOCP(object):
 
             tags.append('prod')
 
-            if self.byo_lb == "False":
+            # TODO(vponomar): update it when we support haproxy
+            if self.byo_lb == "False" and False:
                 tags.append('haproxy')
 
             tags.append('ocp-install')
