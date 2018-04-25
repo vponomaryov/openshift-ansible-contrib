@@ -78,4 +78,8 @@
     openshift_master_cluster_hostname: "{{ load_balancer_hostname }}"
     openshift_master_cluster_public_hostname: "{{ load_balancer_hostname }}"
     os_sdn_network_plugin_name: "{{ openshift_sdn }}"
-    openshift_master_identity_providers: "[{'name': 'allow_all', 'login': 'true', 'challenge': 'true', 'kind': 'AllowAllPasswordIdentityProvider'}]"
+    openshift_master_identity_providers:
+    - name: 'allow_all'
+      kind: 'AllowAllPasswordIdentityProvider'
+      login: True
+      challenge: True
