@@ -22,6 +22,7 @@
     groups: allnodes, masters, etcd, nodes, cluster_hosts, master
     openshift_node_labels:
       role: master
+      node-role.kubernetes.io/master: true
   with_items: "{{ groups[cluster_id + '-master'] }}"
 
 - name: Add a master to the single master group
@@ -31,6 +32,7 @@
     groups: single_master
     openshift_node_labels:
       role: master
+      node-role.kubernetes.io/master: true
   with_items: "{{ groups[cluster_id + '-master'][0] }}"
 
 - name: Add infra instances to host group
@@ -40,6 +42,7 @@
     groups: allnodes, nodes, cluster_hosts, schedulable_nodes, infra
     openshift_node_labels:
       role: infra
+      node-role.kubernetes.io/infra: true
   with_items: "{{ groups[cluster_id + '-infra'] | default([]) }}"
 
 - name: Add app instances to host group
@@ -49,6 +52,10 @@
     groups: allnodes, nodes, cluster_hosts, schedulable_nodes, app
     openshift_node_labels:
       role: app
+      node-role.kubernetes.io/compute: true
+      # NOTE(vponomar): we add 'infra' selector too, while we do not allow to
+      # install separate infra nodes.
+      node-role.kubernetes.io/infra: true
   with_items: "{{ groups[cluster_id + '-app'] }}"
 
 - name: Add new node instances to host group
@@ -58,6 +65,10 @@
     groups: allnodes, new_nodes
     openshift_node_labels:
       role: "{{ node_type }}"
+      # TODO(vponomar): Rework it when we support any type of nodes to
+      # be added to an existing cluster.
+      node-role.kubernetes.io/compute: true
+      node-role.kubernetes.io/infra: true
   with_items: "{{ groups.tag_provision_node | default([]) }}"
   when:
     - add_node is defined
@@ -97,6 +108,7 @@
     groups: nodes, cluster_hosts, schedulable_nodes
     openshift_node_labels:
       role: storage
+      node-role.kubernetes.io/storage: true
   with_items: "{{ groups[cluster_id + '-storage'] }}"
   when:
     - "'cns' in container_storage and add_node is defined and 'storage' in node_type"
