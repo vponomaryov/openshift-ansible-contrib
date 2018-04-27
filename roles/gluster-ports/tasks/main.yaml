@@ -15,8 +15,6 @@
 - name: save iptables
   shell: iptables-save > /etc/sysconfig/iptables
   when: rule|changed
-  notify:
-    - restart iptables
 
 - name: open gluster ports
   iptables:
@@ -34,5 +32,3 @@
 - name: save iptables
   shell: iptables-save > /etc/sysconfig/iptables
   when: heketi|changed
-  notify:
-    - restart iptables
