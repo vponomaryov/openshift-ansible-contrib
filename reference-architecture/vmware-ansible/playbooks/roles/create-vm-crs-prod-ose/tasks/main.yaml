@@ -113,6 +113,7 @@
     hostname: "{{ item.value.guestname }}"
     ansible_fqdn: "{{ item.value.guestname }}.{{ dns_zone }}"
     ansible_ssh_host: "{{ ip4addrs[item.value.guestname] }}"
+    openshift_node_group_name: "node-config-storage"
     # old groups are: crs, production_group, {{cluster-id}}-crs
     groups: "{{ cluster_id }}-crs, crs, storage, glusterfs"
     # Following vars are for 'openshift_storage_glusterfs' role from

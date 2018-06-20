@@ -39,3 +39,33 @@
     load_balancer_hostname: "{{ lb_host }}"
     openshift_master_cluster_hostname: "{{ load_balancer_hostname }}"
     openshift_master_cluster_public_hostname: "{{ load_balancer_hostname }}"
+    # 'openshift_node_groups' is required for OCP3.10
+    openshift_node_groups:
+    - name: node-config-master
+      labels:
+      - 'node-role.kubernetes.io/master=true'
+      edits: []
+    - name: node-config-infra
+      labels:
+        - 'node-role.kubernetes.io/infra=true'
+      edits: []
+    - name: node-config-compute
+      labels:
+        - 'node-role.kubernetes.io/compute=true'
+      edits: []
+    - name: node-config-compute-and-infra
+      labels:
+        - 'node-role.kubernetes.io/compute=true'
+        - 'node-role.kubernetes.io/infra=true'
+        - 'node-role.kubernetes.io/compute=true,node-role.kubernetes.io/infra=true'
+      edits: []
+    - name: node-config-storage
+      labels:
+        - 'node-role.kubernetes.io/storage=true'
+      edits: []
+    - name: node-config-haproxy
+      labels: []
+      edits: []
+    - name: node-config-nfs
+      labels: []
+      edits: []

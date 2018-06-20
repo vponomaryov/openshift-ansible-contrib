@@ -63,4 +63,5 @@
     ansible_fqdn: "{{ item.value.guestname }}.{{ dns_zone }}"
     ansible_ssh_host: "{{ facts.instance.hw_eth0.ipaddresses | ipv4 | first }}"
     groups: "{{ host_data.value.tag }}, nfs_group"
+    openshift_node_group_name: "node-config-nfs"
   when: host_data | default({})

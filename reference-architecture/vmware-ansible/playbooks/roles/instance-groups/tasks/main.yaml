@@ -23,6 +23,7 @@
     openshift_node_labels:
       role: master
       node-role.kubernetes.io/master: true
+    openshift_node_group_name: "node-config-master"
   with_items: "{{ groups[cluster_id + '-master'] }}"
 
 - name: Add a master to the single master group
@@ -33,6 +34,7 @@
     openshift_node_labels:
       role: master
       node-role.kubernetes.io/master: true
+    openshift_node_group_name: "node-config-master"
   with_items: "{{ groups[cluster_id + '-master'][0] }}"
 
 - name: Add infra instances to host group
@@ -43,6 +45,7 @@
     openshift_node_labels:
       role: infra
       node-role.kubernetes.io/infra: true
+    openshift_node_group_name: "node-config-compute-and-infra"
   with_items: "{{ groups[cluster_id + '-infra'] | default([]) }}"
 
 - name: Add app instances to host group
@@ -56,6 +59,7 @@
       # NOTE(vponomar): we add 'infra' selector too, while we do not allow to
       # install separate infra nodes.
       node-role.kubernetes.io/infra: true
+    openshift_node_group_name: "node-config-compute-and-infra"
   with_items: "{{ groups[cluster_id + '-app'] }}"
 
 - name: Add new node instances to host group
@@ -69,6 +73,9 @@
       # be added to an existing cluster.
       node-role.kubernetes.io/compute: true
       node-role.kubernetes.io/infra: true
+    # NOTE(vponomar): following is hardcoded,
+    # because we support addon only of compute/infra nodes.
+    openshift_node_group_name: "node-config-compute-and-infra"
   with_items: "{{ groups.tag_provision_node | default([]) }}"
   when:
     - add_node is defined
@@ -78,6 +85,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: allnodes
+    openshift_node_group_name: "node-config-nfs"
   with_items: "{{ groups[cluster_id + '-networkfs'] | default([]) }}"
 
 - name: Add loadbalancer instances to allnodes
@@ -85,6 +93,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: allnodes
+    openshift_node_group_name: "node-config-haproxy"
   with_items: "{{ groups[cluster_id + '-loadbalancer'] | default([]) }}"
 
 - name: Add cns instances to allnodes
@@ -92,6 +101,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: allnodes
+    openshift_node_group_name: "node-config-storage"
   with_items: "{{ groups[cluster_id + '-storage'] | default([]) }}"
 
 - name: Add crs instances to allnodes
@@ -99,6 +109,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: allnodes
+    openshift_node_group_name: "node-config-storage"
   with_items: "{{ groups[cluster_id + '-crs'] | default([]) }}"
 
 - name: Add cns instances to host group
@@ -109,6 +120,7 @@
     openshift_node_labels:
       role: storage
       node-role.kubernetes.io/storage: true
+    openshift_node_group_name: "node-config-storage"
   with_items: "{{ groups[cluster_id + '-storage'] }}"
   when:
     - "'cns' in container_storage and add_node is defined and 'storage' in node_type"
@@ -118,6 +130,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: storage, crs
+    openshift_node_group_name: "node-config-storage"
   with_items: "{{ groups[cluster_id + '-crs'] }}"
   when:
     - "'crs' in container_storage and add_node is defined and 'storage' in node_type"
@@ -127,6 +140,7 @@
     name: "{{ hostvars[item].inventory_hostname }}"
     openshift_hostname: "{{ hostvars[item].inventory_hostname }}"
     groups: single_crs
+    openshift_node_group_name: "node-config-storage"
   with_items: "{{ groups[cluster_id + '-crs'][0] }}"
   when:
     - "'crs' in container_storage and add_node is defined and 'storage' in node_type"

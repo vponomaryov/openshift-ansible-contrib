@@ -110,6 +110,9 @@
     ansible_fqdn: "{{ item.value.guestname }}.{{ dns_zone }}"
     ansible_ssh_host: "{{ ip4addrs[item.value.guestname] }}"
     groups: "{{ item.value.tag }}, production_group{{ is_add_nodes | ternary(', new_nodes', '')}}"
+    openshift_node_group_name: "{{ 
+        (item.value.guesttype == 'master') | ternary('node-config-master',
+                                                     'node-config-compute-and-infra') }}"
   with_dict: "{{ host_inventory }}"
   when: "item.value.guesttype in ['app', 'master', 'infra']"
 
