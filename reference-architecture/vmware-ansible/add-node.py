@@ -209,11 +209,11 @@ class VMWareAddNode(object):
             'docker_image_tag': '',
             'ose_puddle_repo': '',
             'gluster_puddle_repo': '',
-            'cns_glusterfs_image': '',
+            'cns_glusterfs_image': 'rhgs3/rhgs-server-rhel7',
             'cns_glusterfs_version': 'latest',
-            'cns_glusterfs_block_image': '',
+            'cns_glusterfs_block_image': 'rhgs3/rhgs-gluster-block-prov-rhel7',
             'cns_glusterfs_block_version': 'latest',
-            'cns_glusterfs_heketi_image': '',
+            'cns_glusterfs_heketi_image': 'rhgs3/rhgs-volmanager-rhel7',
             'cns_glusterfs_heketi_version': 'latest',
             'deployment_type':'openshift-enterprise',
             'openshift_vers':'v3_6',
@@ -407,6 +407,12 @@ class VMWareAddNode(object):
             print ("OCP RPM versions and docker image tag do not match. "
                    "Need either to change 'ose_puddle_repo' or "
                    "'docker_image_tag' config options.")
+        for opt_name in ('cns_glusterfs_image', 'cns_glusterfs_block_image',
+                         'cns_glusterfs_heketi_image'):
+            if len(getattr(self, opt_name).split(':')) > 1:
+                err_count += 1
+                print ("'%s' option is expected to contain "
+                       "only image name." % opt_name)
 
         if err_count > 0:
             print "Please fill out the missing variables in %s " %  vmware_ini_path
@@ -575,8 +581,6 @@ class VMWareAddNode(object):
                 self.docker_insecure_registries)
         if self.docker_image_tag:
             playbook_vars_dict['openshift_image_tag'] = self.docker_image_tag
-        if self.openshift_vers in ('v3_6', 'v3_7'):
-            playbook_vars_dict['docker_version'] = '1.12.6'
         for key in ('image', 'version',
                     'block_image', 'block_version',
                     'heketi_image', 'heketi_version'):
@@ -584,6 +588,21 @@ class VMWareAddNode(object):
             if not value:
                 continue
             playbook_vars_dict['openshift_storage_glusterfs_%s' % key] = value
+        if self.openshift_vers in ('v3_6', 'v3_7'):
+            playbook_vars_dict['docker_version'] = '1.12.6'
+        elif self.openshift_vers != "v3_9":
+            if self.cns_glusterfs_version:
+                playbook_vars_dict['openshift_storage_glusterfs_image'] = (
+                    "%s:%s" % (self.cns_glusterfs_image or 'rhgs3/rhgs-server-rhel7',
+                               self.cns_glusterfs_version))
+            if self.cns_glusterfs_block_version:
+                playbook_vars_dict['openshift_storage_glusterfs_block_image'] = (
+                    "%s:%s" % (self.cns_glusterfs_block_image or 'rhgs3/rhgs-gluster-block-prov-rhel7',
+                               self.cns_glusterfs_block_version))
+            if self.cns_glusterfs_heketi_version:
+                playbook_vars_dict['openshift_storage_glusterfs_heketi_image'] = (
+                    "%s:%s" % (self.cns_glusterfs_heketi_image or 'rhgs3/rhgs-volmanager-rhel7',
+                               self.cns_glusterfs_heketi_version))
 
         playbook_vars_str = ' '.join('%s=%s' % (k, v)
                                      for (k, v) in playbook_vars_dict.items())
