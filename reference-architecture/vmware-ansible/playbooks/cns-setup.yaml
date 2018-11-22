@@ -121,37 +121,20 @@
         value: 2
       - key: cns.dynamic_provisioning.storage_classes
         value:
-          storage_class1:
-            name:  "{{ 'sc-glusterfs' + (999999999999999 | random | to_uuid) }}"
+          file_storage_class:
             provisioner: "kubernetes.io/glusterfs"
             resturl: "http://{{ master_ipv4 }}:8080"
             restuser: "admin"
             secretnamespace: "cns" 
-            secretname: "{{ 'heketi-secret-for-glusterfs-sc' +
-                            (999999999999999 | random | to_uuid) }}"
             volumenameprefix: "cns-vol"
-          storage_class2:
-            name:  "{{ 'sc-glusterblock' + (999999999999999 | random | to_uuid) }}"
+          block_storage_class:
             provisioner: "gluster.org/glusterblock"
             resturl: "http://{{ master_ipv4 }}:8080"
-            auth: True
             restuser: "admin"
             restsecretnamespace: "cns"
-            restsecretname: "{{ 'heketi-secret-for-glusterblock-sc' +
-                                (999999999999999 | random | to_uuid)}}"
+            volumenameprefix: "cns-vol"
+            auth: True
             hacount: "3"
             chapauthenabled: "true"
-      - key: cns.dynamic_provisioning.secrets
-        value:
-          secret1:
-            secret_name: "{{ 'heketi-secret-for-glusterfs-sc' +
-                             (999999999999999 | random | to_uuid) }}"
-            namespace: "cns"
-            type: "kubernetes.io/glusterfs"
-          secret2:
-            secret_name: "{{ 'heketi-secret-for-glusterblock-sc' +
-                             (999999999999999 | random | to_uuid) }}"
-            namespace: "cns"
-            type: "gluster.org/glusterblock"
     when: cns_automation_config_file_path | length > 0
     run_once: true
