@@ -111,6 +111,15 @@
                         {{ ['/dev/sd' + 'defghijklmnopqrstuvwxyz'[item.0]] }}"
   with_indexed_items: "{{ disks_info[3::] }}"
 
+- name: Define glusterfs additional devices
+  set_fact:
+    glusterfs_additional_devices: "{{
+        glusterfs_additional_devices | default([])
+    }} + {{
+        ['/dev/sd' + 'defghijklmnopqrstuvwxyz'[item.0 + (glusterfs_devices|length)]]
+    }}"
+  with_indexed_items: "{{ additional_disks_info }}"
+
 - name: Add CRS production VMs to inventory
   add_host:
     hostname: "{{ item.value.guestname }}"
@@ -127,3 +136,37 @@
     glusterfs_zone: "{{ ip4addrs[item.value.guestname].split('.')[-2::] | join('') | int }}"
   with_dict: "{{ host_inventory }}"
   when: "item.value.guesttype in ['crs', ]"
+
+# Following updates config file
+# which is required for automated tests from 'cns-automation' repo
+
+- name: Combine data about gluster servers for 'cns-automation' config file
+  set_fact:
+    gluster_servers: "{{
+        gluster_servers | default({}) | combine({
+            ip4addrs[item.value.guestname]: {
+                'manage': item.value.guestname,
+                'storage': ip4addrs[item.value.guestname],
+                'zone': (ip4addrs[item.value.guestname].split('.')[-2::] | join('') | int),
+                'devices': glusterfs_devices,
+                'additional_devices': glusterfs_additional_devices,
+            }
+        })
+    }}"
+  with_dict: "{{ host_inventory }}"
+  when:
+  - item.value.guesttype in ['crs', ]
+  - cns_automation_config_file_path | length > 0
+
+- name: Update 'cns-automation' config file
+  yedit:
+    src: "{{ cns_automation_config_file_path }}"
+    state: present
+    edits:
+    - key: gluster_servers
+      value: "{{ gluster_servers }}"
+    - key: cns.trusted_storage_pool_list
+      # NOTE(vponomar): according to the 'cns-automation',
+      #                 following is expected to be list of lists
+      value: "[{{ gluster_servers.keys() }}]"
+  when: gluster_servers is defined

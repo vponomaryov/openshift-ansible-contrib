@@ -46,3 +46,79 @@
   - service:
       name: dnsmasq
       state: restarted
+
+- name: Get IPv4 address of the main master node
+  hosts: single_master
+  tasks:
+  - command: "python -c \"import yaml ;
+        config = yaml.load(open('/etc/origin/master/master-config.yaml', 'r'));
+        print(config['kubernetesMasterConfig']['masterIP'])
+    \""
+    register: master_ipv4
+  - set_fact:
+      master_ipv4: "{{ master_ipv4.stdout_lines[0] }}"
+
+# Following updates config file
+# which is required for automated tests from 'cns-automation' repo
+
+- name: Update 'cns-automation' config file
+  hosts: localhost
+  tasks:
+  - set_fact:
+      master_ipv4: "{{ hostvars[groups['single_master'][0]].master_ipv4 }}"
+  - yedit:
+      src: "{{ cns_automation_config_file_path }}"
+      state: present
+      edits:
+      - key: cns.setup.routing_config
+        value: "{{ app_dns_prefix }}.{{ dns_zone }}"
+      - key: cns.setup.cns_project_name
+        value: 'crs'
+      - key: cns.setup.cns_username
+        # NOTE(vponomar): Following user just should have enough rights
+        # for creation of storage classses and secrets.
+        value: "system:admin"
+      - key: cns.setup.cns_password
+        # NOTE(vponomar): by default it is empty for 'system:admin' user,
+        # update it in case it is changed during deployment.
+        value: ""
+      - key: cns.deployment_type
+        value: 'crs'
+      - key: cns.heketi_config.heketi_dc_name
+        value: "not-applicable-for-crs"
+      - key: cns.heketi_config.heketi_service_name
+        value: "not-applicable-for-crs"
+      - key: cns.heketi_config.heketi_client_node
+        value: "{{ master_ipv4 }}"
+      - key: cns.heketi_config.heketi_server_url
+        value: "http://{{ master_ipv4 }}:8080"
+      - key: cns.heketi_config.heketi_cli_user
+        value: 'admin'
+      - key: cns.heketi_config.heketi_cli_key
+        value: "{{ dp_tool_heketi_admin_key }}"
+      - key: cns.heketi_volume.name
+        value: "{{ 'volume_for_testing_size_extending' +
+                   (999999999999999 | random | to_uuid) }}"
+      - key: cns.heketi_volume.size
+        value: 1
+      - key: cns.heketi_volume.expand_size
+        value: 2
+      - key: cns.dynamic_provisioning.storage_classes
+        value:
+          file_storage_class:
+            provisioner: "kubernetes.io/glusterfs"
+            resturl: "http://{{ master_ipv4 }}:8080"
+            restuser: "admin"
+            secretnamespace: "crs" 
+            volumenameprefix: "crs-vol"
+          block_storage_class:
+            provisioner: "gluster.org/glusterblock"
+            resturl: "http://{{ master_ipv4 }}:8080"
+            restuser: "admin"
+            restsecretnamespace: "crs"
+            volumenameprefix: "crs-vol"
+            auth: True
+            hacount: "3"
+            chapauthenabled: "true"
+    when: cns_automation_config_file_path | length > 0
+    run_once: true
