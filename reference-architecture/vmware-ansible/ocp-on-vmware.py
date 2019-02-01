@@ -682,19 +682,6 @@ class VMwareOnOCP(object):
                 ','.join(self.openshift_disable_check_data))
         if self.docker_registry_url:
             playbook_vars_dict['oreg_url'] = self.docker_registry_url
-            # NOTE(vponomar): following is workaround for the logic
-            # from 'openshift-ansible' lib where deployed apps
-            # such as 'registry-console' and 'web console' don't pick up
-            # custom registry automatically and continue using default one.
-            if self.deployment_type != 'openshift-enterprise':
-                cockpit_image_prefix = 'openshift/'
-                web_console_prefix = 'openshift/origin-'
-            else:
-                cockpit_image_prefix = 'openshift3/'
-                web_console_prefix = 'openshift3/ose-'
-            reg_url = self.docker_registry_url.split(cockpit_image_prefix)[0]
-            playbook_vars_dict['openshift_web_console_prefix'] = (
-                '%s%s' % (reg_url, web_console_prefix))
         if self.docker_additional_registries:
             playbook_vars_dict['openshift_docker_additional_registries'] = (
                 self.docker_additional_registries)
