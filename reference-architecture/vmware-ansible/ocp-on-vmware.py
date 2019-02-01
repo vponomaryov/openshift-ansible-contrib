@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # set ts=4 sw=4 et
-import argparse, click, datetime,  os, sys, fileinput, json, iptools, ldap, six, random, yaml
+import argparse, click, datetime,  os, sys, fileinput, json, iptools, six, random, yaml
 from argparse import RawTextHelpFormatter
 import requests
 from six.moves import configparser
@@ -545,42 +545,7 @@ class VMwareOnOCP(object):
                 else:
                     print line,
         elif self.auth_type == 'ldap':
-            l_bdn = ""
-
-            for d in self.ldap_fqdn.split("."):
-                l_bdn = l_bdn + "dc=" + d + ","
-
-            l = ldap.initialize("ldap://" + self.ldap_fqdn)
-            try:
-                l.protocol_version = ldap.VERSION3
-                l.set_option(ldap.OPT_REFERRALS, 0)
-                bind = l.simple_bind_s(self.ldap_user, self.ldap_user_password)
-
-                base = l_bdn[:-1]
-                criteria = "(&(objectClass=user)(sAMAccountName=" + self.ldap_user + "))"
-                attributes = 'displayName', 'distinguishedName'
-                result = l.search_s(base, ldap.SCOPE_SUBTREE, criteria, attributes)
-
-                results = [entry for dn, entry in result if isinstance(entry, dict)]
-            finally:
-                l.unbind()
-
-            for result in results:
-                bindDN = str(result['distinguishedName']).strip("'[]")
-                url_base = bindDN.replace(("CN=" + self.ldap_user + ","), "")
-                url = "ldap://" + self.ldap_fqdn + ":389/" + url_base + "?sAMAccountName"
-
-            for line in fileinput.input(install_file, inplace=True):
-            # Parse our ldap url
-                if line.startswith("      url:"):
-                    print "      url: " + url
-                elif line.startswith("      bindPassword:"):
-                    print "      bindPassword: " + self.ldap_user_password
-                elif line.startswith("      bindDN:"):
-                    print "      bindDN: " + bindDN
-                else:
-                    print line,
-
+            raise NotImplementedError("'ldap' is not supported.")
         else:
             print ("'auth_type' configuration has improper value '%s'. "
                    "It is allowed to be either "
