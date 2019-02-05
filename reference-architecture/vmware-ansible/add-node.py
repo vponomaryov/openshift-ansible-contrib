@@ -649,13 +649,16 @@ class VMWareAddNode(object):
                 self.docker_insecure_registries)
         if self.docker_image_tag:
             playbook_vars_dict['openshift_image_tag'] = self.docker_image_tag
-        for key in ('image', 'version',
-                    'block_image', 'block_version',
-                    'heketi_image', 'heketi_version'):
-            value = getattr(self, 'cns_glusterfs_%s' % key)
-            if not value:
-                continue
-            playbook_vars_dict['openshift_storage_glusterfs_%s' % key] = value
+
+        if self.openshift_vers in ("v3_6", "v3_7", "v3_9"):
+            for key in ('image', 'version',
+                        'block_image', 'block_version',
+                        'heketi_image', 'heketi_version'):
+                value = getattr(self, 'cns_glusterfs_%s' % key)
+                if not value:
+                    continue
+                playbook_vars_dict['openshift_storage_glusterfs_%s' % key] = (
+                    value)
         if self.openshift_vers in ('v3_6', 'v3_7'):
             playbook_vars_dict['docker_version'] = '1.12.6'
         elif self.openshift_vers != "v3_9":
@@ -663,14 +666,25 @@ class VMWareAddNode(object):
                 playbook_vars_dict['openshift_storage_glusterfs_image'] = (
                     "%s:%s" % (self.cns_glusterfs_image or 'rhgs3/rhgs-server-rhel7',
                                self.cns_glusterfs_version))
+            elif self.cns_glusterfs_image:
+                playbook_vars_dict['openshift_storage_glusterfs_image'] = (
+                    "%s:latest" % self.cns_glusterfs_image)
             if self.cns_glusterfs_block_version:
                 playbook_vars_dict['openshift_storage_glusterfs_block_image'] = (
                     "%s:%s" % (self.cns_glusterfs_block_image or 'rhgs3/rhgs-gluster-block-prov-rhel7',
                                self.cns_glusterfs_block_version))
+            elif self.cns_glusterfs_block_image:
+                playbook_vars_dict[
+                    "openshift_storage_glusterfs_block_image"] = (
+                        "%s:latest" % self.cns_glusterfs_block_image)
             if self.cns_glusterfs_heketi_version:
                 playbook_vars_dict['openshift_storage_glusterfs_heketi_image'] = (
                     "%s:%s" % (self.cns_glusterfs_heketi_image or 'rhgs3/rhgs-volmanager-rhel7',
                                self.cns_glusterfs_heketi_version))
+            elif self.cns_glusterfs_heketi_image:
+                playbook_vars_dict[
+                    "openshift_storage_glusterfs_heketi_image"] = (
+                        "%s:latest" % self.cns_glusterfs_heketi_image)
 
         playbook_vars_str = ' '.join('%s=%s' % (k, v)
                                      for (k, v) in playbook_vars_dict.items())
