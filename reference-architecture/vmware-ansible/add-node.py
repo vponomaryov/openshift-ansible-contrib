@@ -78,6 +78,7 @@ class VMWareAddNode(object):
     container_storage_glusterfs_timeout=None
     heketi_admin_key=None
     heketi_user_key=None
+    heketi_custom_zones = None
     tag=None
     verbose=0
     docker_registry_url=None
@@ -209,6 +210,7 @@ class VMWareAddNode(object):
             'container_storage_glusterfs_timeout': '',
             'heketi_admin_key': '',
             'heketi_user_key': '',
+            'heketi_custom_zones': '',
             'docker_registry_url': '',
             'docker_additional_registries': '',
             'docker_insecure_registries': '',
@@ -285,6 +287,8 @@ class VMWareAddNode(object):
             'vmware', 'container_storage_glusterfs_timeout')
         self.heketi_admin_key = config.get('vmware', 'heketi_admin_key')
         self.heketi_user_key = config.get('vmware', 'heketi_user_key')
+        self.heketi_custom_zones = (
+            config.get('vmware', 'heketi_custom_zones') or '').strip()
         self.docker_registry_url = config.get('vmware', 'docker_registry_url')
         self.docker_additional_registries = config.get(
             'vmware', 'docker_additional_registries')
@@ -606,6 +610,7 @@ class VMWareAddNode(object):
             'additional_disks_to_storage_nodes': self.additional_disks_to_storage_nodes,
             'dp_tool_heketi_admin_key': self.heketi_admin_key,
             'dp_tool_heketi_user_key': self.heketi_user_key,
+            'dp_tool_heketi_custom_zones': self.heketi_custom_zones,
             'ose_puddle_repo': self.ose_puddle_repo,
             'gluster_puddle_repo': self.gluster_puddle_repo,
             'deployment_type': self.deployment_type,

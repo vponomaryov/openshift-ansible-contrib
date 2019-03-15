@@ -105,6 +105,27 @@
         [(item.instance.hw_eth0.ipaddresses | ipv4 | first)] }}"
   with_items: "{{ facts.results }}"
 
+- set_fact:
+    dp_tool_heketi_custom_zones_list: []
+- name: Process 'dp_tool_heketi_custom_zones' var
+  set_fact:
+    dp_tool_heketi_custom_zones_list: "{{
+      dp_tool_heketi_custom_zones_list + [item.strip()]
+    }}"
+  with_items: "{{ dp_tool_heketi_custom_zones.strip().split(',') }}"
+  when: item.strip()
+- name: Map storage nodes and Heketi zones
+  set_fact:
+    heketi_chosen_zones_per_node: "{{
+      heketi_chosen_zones_per_node | default({}) | combine({
+        item.1.instance.hw_name: ((
+          dp_tool_heketi_custom_zones_list[item.0 | int] | default(
+            (ip4addrs[item.1.instance.hw_name].split('.')[-2::] | join('')),
+            true
+          )).strip() | int)
+      }) }}"
+  with_indexed_items: "{{ facts.results }}"
+
 - name: Define glusterfs devices
   set_fact:
     glusterfs_devices: "{{ glusterfs_devices | default([]) }} +
@@ -133,7 +154,7 @@
     glusterfs_devices: "{{ glusterfs_devices }}"
     glusterfs_hostname: "{{ item.value.guestname }}"
     glusterfs_ip: "{{ ip4addrs[item.value.guestname] }}"
-    glusterfs_zone: "{{ ip4addrs[item.value.guestname].split('.')[-2::] | join('') | int }}"
+    glusterfs_zone: "{{ heketi_chosen_zones_per_node[item.value.guestname] }}"
   with_dict: "{{ host_inventory }}"
   when: "item.value.guesttype in ['crs', ]"
 
